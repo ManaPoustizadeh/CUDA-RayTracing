@@ -3,7 +3,6 @@
 #include "device_launch_parameters.h"
 
 #include <stdio.h>
-
 #include <cstdlib>
 #include <cstdio>
 #include <cmath>
@@ -13,9 +12,10 @@
 #include <cassert>
 #include <algorithm>
 
-#define WIDTH 640			//width of the final image
-#define HEIGHT	 480		//height of the final image
-#define BS 512				//number of threads in a block
+#define WIDTH   640			//width of the final image
+#define HEIGHT	480			//height of the final image
+#define BS 16				//number of threads in a block
+#define MAX_RAY_DEPTH 4			// This variable controls the maximum recursion depth
 
 #if defined __linux__ || defined __APPLE__
 // "Compiled for Linux
@@ -25,13 +25,10 @@
 #endif
 
 
-
-
-
 template<typename T>
 class Vec3
 {
-	public:
+public:
 	T x, y, z;
 	__device__ __host__ Vec3() : x(T(0)), y(T(0)), z(T(0)) {}
 	__device__ __host__ Vec3(T xx) : x(xx), y(xx), z(xx) {}
@@ -45,17 +42,17 @@ class Vec3
 		}
 		return *this;
 	}
-	Vec3<T> operator * (const T &f) const { return Vec3<T>(x * f, y * f, z * f); }
-	Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x * v.x, y * v.y, z * v.z); }
-	T dot(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
-	Vec3<T> operator - (const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
-	Vec3<T> operator + (const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
-	Vec3<T>& operator += (const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
-	Vec3<T>& operator *= (const Vec3<T> &v) { x *= v.x, y *= v.y, z *= v.z; return *this; }
-	Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
-	T length2() const { return x * x + y * y + z * z; }
-	T length() const { return sqrt(length2()); }
-	friend std::ostream & operator << (std::ostream &os, const Vec3<T> &v)
+	__device__ __host__ Vec3<T> operator * (const T &f) const { return Vec3<T>(x * f, y * f, z * f); }
+	__device__ __host__ Vec3<T> operator * (const Vec3<T> &v) const { return Vec3<T>(x * v.x, y * v.y, z * v.z); }
+	__device__ __host__ T dot(const Vec3<T> &v) const { return x * v.x + y * v.y + z * v.z; }
+	__device__ __host__ Vec3<T> operator - (const Vec3<T> &v) const { return Vec3<T>(x - v.x, y - v.y, z - v.z); }
+	__device__ __host__ Vec3<T> operator + (const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
+	__device__ __host__ Vec3<T>& operator += (const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
+	__device__ __host__ Vec3<T>& operator *= (const Vec3<T> &v) { x *= v.x, y *= v.y, z *= v.z; return *this; }
+	__device__ __host__ Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
+	__device__ __host__ T length2() const { return x * x + y * y + z * z; }
+	__device__ __host__ T length() const { return sqrt(length2()); }
+	__device__ __host__ friend std::ostream & operator << (std::ostream &os, const Vec3<T> &v)
 	{
 		os << "[" << v.x << " " << v.y << " " << v.z << "]";
 		return os;
@@ -66,12 +63,12 @@ typedef Vec3<float> Vec3f;
 
 class Sphere
 {
-	public:
+public:
 	Vec3f center;                           /// position of the sphere
 	float radius, radius2;                  /// sphere radius and radius^2
 	Vec3f surfaceColor, emissionColor;      /// surface color and emission (light)
 	float transparency, reflection;         /// surface transparency and reflectivity
-	Sphere(
+	__device__ __host__ Sphere(
 		const Vec3f &c,
 		const float &r,
 		const Vec3f &sc,
@@ -82,17 +79,18 @@ class Sphere
 		transparency(transp), reflection(refl)
 	{ /* empty */
 	}
-	//[comment]
 	// Compute a ray-sphere intersection using the geometric solution
-	//[/comment]
-	bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1) const
+	__device__ __host__ bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1) const
 	{
 		Vec3f l = center - rayorig;
 		float tca = l.dot(raydir);
+
 		if (tca < 0) return false;
 		float d2 = l.dot(l) - tca * tca;
+
 		if (d2 > radius2) return false;
 		float thc = sqrt(radius2 - d2);
+
 		t0 = tca - thc;
 		t1 = tca + thc;
 
@@ -100,14 +98,7 @@ class Sphere
 	}
 };
 
-
-
-//[comment]
-// This variable controls the maximum recursion depth
-//[/comment]
-#define MAX_RAY_DEPTH 5
-
-float mix(const float &a, const float &b, const float &mix)
+__device__ __host__ float mix(const float &a, const float &b, const float &mix)
 {
 	return b * mix + a * (1 - mix);
 }
@@ -125,14 +116,15 @@ float mix(const float &a, const float &b, const float &mix)
 __device__ __host__ Vec3f trace(
 	const Vec3f &rayorig,
 	const Vec3f &raydir,
-	const std::vector<Sphere> &spheres,
-	const int &depth)
+	Sphere* spheres,
+	const int &depth,
+	int size)
 {
 	//if (raydir.length() != 1) std::cerr << "Error " << raydir << std::endl;
 	float tnear = INFINITY;
 	const Sphere* sphere = NULL;
 	// find intersection of this ray with the sphere in the scene
-	for (unsigned i = 0; i < spheres.size(); ++i) {
+	for (unsigned i = 0; i < size; ++i) {
 		float t0 = INFINITY, t1 = INFINITY;
 		if (spheres[i].intersect(rayorig, raydir, t0, t1)) {
 			if (t0 < 0) t0 = t1;
@@ -144,6 +136,7 @@ __device__ __host__ Vec3f trace(
 	}
 	// if there's no intersection return black or background color
 	if (!sphere) return Vec3f(2);
+	//printf("found an intersection, depth is: %d \n", depth);
 	Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray
 	Vec3f phit = rayorig + raydir * tnear; // point of intersection
 	Vec3f nhit = phit - sphere->center; // normal at the intersection point
@@ -163,7 +156,7 @@ __device__ __host__ Vec3f trace(
 		// are already normalized)
 		Vec3f refldir = raydir - nhit * 2 * raydir.dot(nhit);
 		refldir.normalize();
-		Vec3f reflection = trace(phit + nhit * bias, refldir, spheres, depth + 1);
+		Vec3f reflection = trace(phit + nhit * bias, refldir, spheres, depth + 1, size);
 		Vec3f refraction = 0;
 		// if the sphere is also transparent compute refraction ray (transmission)
 		if (sphere->transparency) {
@@ -172,28 +165,33 @@ __device__ __host__ Vec3f trace(
 			float k = 1 - eta * eta * (1 - cosi * cosi);
 			Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k));
 			refrdir.normalize();
-			refraction = trace(phit - nhit * bias, refrdir, spheres, depth + 1);
+			refraction = trace(phit - nhit * bias, refrdir, spheres, depth + 1, size);
 		}
 		// the result is a mix of reflection and refraction (if the sphere is transparent)
 		surfaceColor = (
 			reflection * fresneleffect +
 			refraction * (1 - fresneleffect) * sphere->transparency) * sphere->surfaceColor;
 	}
+
 	else {
+		
 		// it's a diffuse object, no need to raytrace any further
-		for (unsigned i = 0; i < spheres.size(); ++i) {
+		for (unsigned i = 0; i < size; ++i) {
 			if (spheres[i].emissionColor.x > 0) {
 				// this is a light
 				Vec3f transmission = 1;
 				Vec3f lightDirection = spheres[i].center - phit;
 				lightDirection.normalize();
-				for (unsigned j = 0; j < spheres.size(); ++j) {
+				
+				for (unsigned j = 0; j < size; ++j) {
 					if (i != j) {
+						
 						float t0, t1;
 						if (spheres[j].intersect(phit + nhit * bias, lightDirection, t0, t1)) {
 							transmission = 0;
 							break;
 						}
+						//printf("i = %d, j = %d\n", i, j);
 					}
 				}
 				surfaceColor += sphere->surfaceColor * transmission *
@@ -201,31 +199,35 @@ __device__ __host__ Vec3f trace(
 			}
 		}
 	}
-
+	//printf("trace ended\n");
 	return surfaceColor + sphere->emissionColor;
 }
 
 
 //Here each thread specifies the ray origin and direction then calls the trace function
-__global__ void par_render(const std::vector<Sphere> &spheres, Vec3f* pixel, float invHeight, float invWidth, float angle, float fov, float aspectRatio)
-{
+__global__ void par_render(Sphere* spheres, Vec3f* pixel, float invHeight, float invWidth, float angle, float fov, float aspectRatio, int size){
 	int x = blockDim.x*blockIdx.x + threadIdx.x;
 	int y = blockDim.y*blockIdx.y + threadIdx.y;
-	pixel += x;
+	pixel += x + y*WIDTH;
 	float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
-	float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
+	float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;	
 	Vec3f raydir(xx, yy, -1);
 	raydir.normalize();
-	if(x<WIDTH && y<HEIGHT)
-		*pixel = trace(Vec3f(0), (0,0,0), spheres, 0);
+	//printf("entered kernel\n");
+	if (x < WIDTH && y < HEIGHT) {
+		*pixel = trace(Vec3f(0), raydir, spheres, 0, size);
+	}
+		
 }
 
 //In this function we allocate GPU memories, copy the data to GPU and call the kernel (par_render)
-Vec3f parallelRender(const std::vector<Sphere> &spheres)
+Vec3f parallelRender(std::vector<Sphere> &spheres)
 {
-	unsigned int spheres_size = spheres.size()*sizeof(Sphere);
+	int size = spheres.size();
+	unsigned int spheres_size = size * sizeof(Sphere);
 	//printf("d_sphere's first element origin: %d", spheres_size);
-	std::vector<Sphere> d_spheres;
+	//std::vector<Sphere> d_spheres;
+	Sphere *d_spheres;
 	Vec3f *image = new Vec3f[WIDTH * HEIGHT], *pixel = image;
 	//Vec3f *d_image;
 	Vec3f *d_pixel;
@@ -235,16 +237,29 @@ Vec3f parallelRender(const std::vector<Sphere> &spheres)
 	float angle = tan(M_PI * 0.5 * fov / 180.);
 
 
-	for (int i = 0; i < spheres.size(); i++){
-		d_spheres.push_back(spheres[i]);
-		printf("origins.x: %p\n",d_spheres.data());
-	}
-	printf("origins.x: %p\n", d_spheres.data());
+	
 	cudaError_t err;
-	//cudaEvent_t start0, stop0;
-	dim3 grid((WIDTH + BS - 1) / BS, (HEIGHT + BS - 1) / BS, 1);
+	cudaEvent_t start0, stop0;
+	dim3 grid((WIDTH-1)/BS+1, (HEIGHT-1)/BS + 1, 1);
 	dim3 threads(BS, BS, 1);
 
+	err = cudaEventCreate(&start0);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+
+	err = cudaEventCreate(&stop0);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+
+	err = cudaEventRecord(start0, NULL);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
 	err = cudaMalloc((void **)&d_spheres, spheres_size);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
@@ -255,22 +270,49 @@ Vec3f parallelRender(const std::vector<Sphere> &spheres)
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
-	err = cudaMemcpy(d_spheres.data(), spheres.data(), spheres_size, cudaMemcpyHostToDevice);
+	err = cudaMemcpy(d_spheres, spheres.data(), spheres_size, cudaMemcpyHostToDevice);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+	
+	par_render << <grid, threads >> > (d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size);
+
+	err = cudaGetLastError();
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		//printf("blah blah\n");
+		system("PAUSE");
+		exit(EXIT_FAILURE);
+	}
+	err = cudaMemcpy(pixel, d_pixel, image_size, cudaMemcpyDeviceToHost);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		system("PAUSE");
 		exit(EXIT_FAILURE);
 	}
-
-	par_render << <grid, threads >> > (d_spheres, pixel, invHeight, invWidth, angle, fov, aspectratio);
 	
-	err = cudaMemcpy(pixel, d_pixel, image_size, cudaMemcpyDeviceToHost);
+	err = cudaEventRecord(stop0, NULL);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
+
+	err = cudaEventSynchronize(stop0);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+
+	float elapsed_time = 0.0f;
+	err = cudaEventElapsedTime(&elapsed_time, start0, stop0);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		exit(EXIT_FAILURE);
+	}
+	printf("Calculation time in msec = %f\n", elapsed_time);
 	// Save result to a PPM image (keep these flags if you compile under Windows)
-	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
+	std::ofstream ofs("./picture.ppm", std::ios::out | std::ios::binary);
 	ofs << "P6\n" << WIDTH << " " << HEIGHT << "\n255\n";
 	for (unsigned i = 0; i < WIDTH * HEIGHT; ++i) {
 		ofs << (unsigned char)(std::min(float(1), image[i].x) * 255) <<
@@ -279,7 +321,8 @@ Vec3f parallelRender(const std::vector<Sphere> &spheres)
 	}
 	ofs.close();
 	cudaFree(d_pixel);
-	cudaFree(d_spheres.data());
+	cudaFree(d_spheres);
+	system("PAUSE");
 
 }
 
@@ -288,7 +331,7 @@ Vec3f parallelRender(const std::vector<Sphere> &spheres)
 // trace it and return a color. If the ray hits a sphere, we return the color of the
 // sphere at the intersection point, else we return the background color.
 //[/comment]
-void render(const std::vector<Sphere> &spheres)
+/*void render(std::vector<Sphere> &spheres)
 {
 	unsigned width = 640, height = 480;
 	Vec3f *image = new Vec3f[width * height], *pixel = image;
@@ -302,7 +345,7 @@ void render(const std::vector<Sphere> &spheres)
 			float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
 			Vec3f raydir(xx, yy, -1);
 			raydir.normalize();
-			*pixel = trace(Vec3f(0), raydir, spheres, 0);
+			*pixel = trace(Vec3f(0), raydir, spheres, 0, spheres.size());
 		}
 	}
 	// Save result to a PPM image (keep these flags if you compile under Windows)
@@ -315,7 +358,7 @@ void render(const std::vector<Sphere> &spheres)
 	}
 	ofs.close();
 	delete[] image;
-}
+}*/
 
 //[comment]
 // In the main function, we will create the scene which is composed of 5 spheres

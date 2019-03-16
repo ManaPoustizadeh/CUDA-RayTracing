@@ -1,79 +1,27 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
   G:\Projects\cuda_minimal\cuda_minimal>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "G:\Projects\cuda_minimal\cuda_minimal\kernel.cu" 
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(200): warning : calling a constexpr __host__ function("max") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(137): warning : calling a __host__ function from a __host__ __device__ function is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(193): warning : calling a __host__ function from a __host__ __device__ function is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a constexpr __host__ function from a __host__ __device__ function is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(220): warning : expression has no effect
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(220): warning : expression has no effect
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(284): warning : missing return statement at end of non-void function "parallelRender"
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(41): warning : calling a __host__ function from a __host__ __device__ function is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(135): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::size const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(137): warning : calling a __host__ function("Sphere::intersect const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(137): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(141): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(148): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(148): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(149): warning : calling a __host__ function("Vec3<float> ::operator - const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(157): warning : calling a __host__ function("Vec3<float> ::dot const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(157): warning : calling a __host__ function("Vec3<float> ::operator - const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(159): warning : calling a __host__ function("Vec3<float> ::dot const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(161): warning : calling a __host__ function("mix") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(164): warning : calling a __host__ function("Vec3<float> ::operator - const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(164): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(164): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(164): warning : calling a __host__ function("Vec3<float> ::dot const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(166): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(166): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(171): warning : calling a __host__ function("Vec3<float> ::dot const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(173): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(173): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(173): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(175): warning : calling a __host__ function("Vec3<float> ::operator - const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(175): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(178): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(178): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(178): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(179): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(179): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(184): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::size const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(185): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(188): warning : calling a __host__ function("Vec3<float> ::operator - const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(188): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(190): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::size const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(193): warning : calling a __host__ function("Sphere::intersect const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(193): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(193): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(193): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("Vec3<float> ::operator +=") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("Vec3<float> ::operator * const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a constexpr __host__ function("std::max<float> ") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("Vec3<float> ::dot const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(199): warning : calling a __host__ function("std::vector< ::Sphere, std::allocator< ::Sphere> > ::operator [] const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(205): warning : calling a __host__ function("Vec3<float> ::operator + const") from a __host__ __device__ function("trace") is not allowed
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(41): warning : calling a __host__ function("Vec3<float> ::length2 const") from a __host__ __device__ function("Vec3<float> ::normalize") is not allowed
-CUDACOMPILE : ptxas warning : Stack size for entry function '_Z10par_renderRKSt6vectorI6SphereSaIS0_EEP4Vec3IfEfffff' cannot be statically determined
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(220): warning : expression has no effect
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(220): warning : expression has no effect
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(284): warning : missing return statement at end of non-void function "parallelRender"
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(206): warning : calling a constexpr __host__ function("max") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(205): warning : calling a constexpr __host__ function from a __host__ __device__ function is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(304): warning : missing return statement at end of non-void function "parallelRender"
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(205): warning : calling a constexpr __host__ function("std::max<float> ") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+CUDACOMPILE : ptxas warning : Stack size for entry function '_Z10par_renderP6SphereP4Vec3IfEfffffi' cannot be statically determined
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(304): warning : missing return statement at end of non-void function "parallelRender"
   kernel.cu
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(155): warning C4305: 'initializing': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(161): warning C4305: 'argument': truncation from 'double' to 'const float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(170): warning C4305: 'initializing': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(226): warning C4267: 'initializing': conversion from 'size_t' to 'unsigned int', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(235): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(297): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(301): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(302): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(330): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(331): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(332): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(333): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(334): warning C4305: 'argument': truncation from 'double' to 'float'
-g:\projects\cuda_minimal\cuda_minimal\kernel.cu(284): warning C4715: 'parallelRender': not all control paths return a value
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(135): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(156): warning C4305: 'initializing': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(162): warning C4305: 'argument': truncation from 'double' to 'const float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(171): warning C4305: 'initializing': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(187): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(194): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(234): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(246): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(350): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(351): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(352): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(353): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(354): warning C4305: 'argument': truncation from 'double' to 'float'
+g:\projects\cuda_minimal\cuda_minimal\kernel.cu(304): warning C4715: 'parallelRender': not all control paths return a value
   cuda_minimal.vcxproj -> G:\Projects\cuda_minimal\x64\Debug\cuda_minimal.exe
   cuda_minimal.vcxproj -> G:\Projects\cuda_minimal\x64\Debug\cuda_minimal.pdb (Full PDB)
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart*.dll" "G:\Projects\cuda_minimal\x64\Debug\"
