@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AnalysisReport Version="1.0">
+  <ProcessId>13696</ProcessId>
+  <ReportCreationTime>2019-03-23T10:51:46.3755805+04:30</ReportCreationTime>
+  <ReportDirectory>c:\temp\cuda_minimal190323_001\cuda_minimal190323_001_Capture_000</ReportDirectory>
+  <ReportFile>c:\temp\cuda_minimal190323_001\cuda_minimal190323_001_Capture_000\cuda_minimal190323_001_Capture_000.nvreport</ReportFile>
+  <CaptureStartQpcTimestamp>198839535659</CaptureStartQpcTimestamp>
+  <CaptureStartNveTimestamp>34327923556042</CaptureStartNveTimestamp>
+  <CaptureStartNveFrequency>2394000000</CaptureStartNveFrequency>
+  <CaptureEndQpcTimestamp>198863168369</CaptureEndQpcTimestamp>
+  <CaptureEndNveTimestamp>34352123452306</CaptureEndNveTimestamp>
+  <CaptureStartRdtscTimestamp>34327923556120</CaptureStartRdtscTimestamp>
+  <CaptureEndRdtscTimestamp>34352123453206</CaptureEndRdtscTimestamp>
+  <CaptureStartFileTimeTimestamp>131977957065514794</CaptureStartFileTimeTimestamp>
+  <CaptureEndFileTimeTimestamp>131977957166580816</CaptureEndFileTimeTimestamp>
+</AnalysisReport>

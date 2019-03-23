@@ -206,8 +206,15 @@ __device__ __host__ Vec3f trace(
 
 //Here each thread specifies the ray origin and direction then calls the trace function
 __global__ void par_render(Sphere* spheres, Vec3f* pixel, float invHeight, float invWidth, float angle, float fov, float aspectRatio, int size){
+	extern __shared__ Sphere shared_spheres[];
 	int x = blockDim.x*blockIdx.x + threadIdx.x;
 	int y = blockDim.y*blockIdx.y + threadIdx.y;
+	if (threadIdx.x == 0) {
+		for (int i = 0; i < size; i++){
+			shared_spheres[i] = spheres[i];
+		}
+	}
+	__syncthreads();
 	pixel += x + y*WIDTH;
 	float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
 	float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;	
@@ -215,7 +222,7 @@ __global__ void par_render(Sphere* spheres, Vec3f* pixel, float invHeight, float
 	raydir.normalize();
 	//printf("entered kernel\n");
 	if (x < WIDTH && y < HEIGHT) {
-		*pixel = trace(Vec3f(0), raydir, spheres, 0, size);
+		*pixel = trace(Vec3f(0), raydir, shared_spheres, 0, size);
 	}
 		
 }
@@ -276,19 +283,16 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 		exit(EXIT_FAILURE);
 	}
 	
-	par_render << <grid, threads >> > (d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size);
+	par_render << <grid, threads, spheres_size >> > (d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size);
 
 	err = cudaGetLastError();
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-		//printf("blah blah\n");
-		system("PAUSE");
 		exit(EXIT_FAILURE);
 	}
 	err = cudaMemcpy(pixel, d_pixel, image_size, cudaMemcpyDeviceToHost);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
-		system("PAUSE");
 		exit(EXIT_FAILURE);
 	}
 	
@@ -325,40 +329,6 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 	system("PAUSE");
 
 }
-
-//[comment]
-// Main rendering function. We compute a camera ray for each pixel of the image
-// trace it and return a color. If the ray hits a sphere, we return the color of the
-// sphere at the intersection point, else we return the background color.
-//[/comment]
-/*void render(std::vector<Sphere> &spheres)
-{
-	unsigned width = 640, height = 480;
-	Vec3f *image = new Vec3f[width * height], *pixel = image;
-	float invWidth = 1 / float(width), invHeight = 1 / float(height);
-	float fov = 30, aspectratio = width / float(height);
-	float angle = tan(M_PI * 0.5 * fov / 180.);
-	// Trace rays
-	for (unsigned y = 0; y < height; ++y) {
-		for (unsigned x = 0; x < width; ++x, ++pixel) {
-			float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
-			float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-			Vec3f raydir(xx, yy, -1);
-			raydir.normalize();
-			*pixel = trace(Vec3f(0), raydir, spheres, 0, spheres.size());
-		}
-	}
-	// Save result to a PPM image (keep these flags if you compile under Windows)
-	std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
-	ofs << "P6\n" << width << " " << height << "\n255\n";
-	for (unsigned i = 0; i < width * height; ++i) {
-		ofs << (unsigned char)(std::min(float(1), image[i].x) * 255) <<
-			(unsigned char)(std::min(float(1), image[i].y) * 255) <<
-			(unsigned char)(std::min(float(1), image[i].z) * 255);
-	}
-	ofs.close();
-	delete[] image;
-}*/
 
 //[comment]
 // In the main function, we will create the scene which is composed of 5 spheres
