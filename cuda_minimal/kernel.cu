@@ -1,6 +1,7 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "cuda_fp16.h"
 
 #include <stdio.h>
 #include <cstdlib>
@@ -12,16 +13,16 @@
 #include <cassert>
 #include <algorithm>
 
-#define WIDTH   640			//width of the final image
-#define HEIGHT	480			//height of the final image
-#define BS 16				//number of threads in a block
+#define WIDTH   8000			//width of the final image
+#define HEIGHT	6000			//height of the final image
+#define BS 16					//number of threads in a block
 #define MAX_RAY_DEPTH 4			// This variable controls the maximum recursion depth
 
 #if defined __linux__ || defined __APPLE__
 // "Compiled for Linux
 #else
 // Windows doesn't define these values by default, Linux does
-#define M_PI 3.141592653589793
+#define M_PI 3.141592653589793f
 #endif
 
 
@@ -37,7 +38,7 @@ public:
 	{
 		T nor2 = length2();
 		if (nor2 > 0) {
-			T invNor = 1 / sqrt(nor2);
+			T invNor = rsqrtf (nor2);
 			x *= invNor, y *= invNor, z *= invNor;
 		}
 		return *this;
@@ -51,7 +52,7 @@ public:
 	__device__ __host__ Vec3<T>& operator *= (const Vec3<T> &v) { x *= v.x, y *= v.y, z *= v.z; return *this; }
 	__device__ __host__ Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
 	__device__ __host__ T length2() const { return x * x + y * y + z * z; }
-	__device__ __host__ T length() const { return sqrt(length2()); }
+	__device__ __host__ T length() const { return sqrtf(length2()); }
 	__device__ __host__ friend std::ostream & operator << (std::ostream &os, const Vec3<T> &v)
 	{
 		os << "[" << v.x << " " << v.y << " " << v.z << "]";
@@ -89,7 +90,7 @@ public:
 		float d2 = l.dot(l) - tca * tca;
 
 		if (d2 > radius2) return false;
-		float thc = sqrt(radius2 - d2);
+		float thc = sqrtf(radius2 - d2);
 
 		t0 = tca - thc;
 		t1 = tca + thc;
@@ -163,7 +164,7 @@ __device__ __host__ Vec3f trace(
 			float ior = 1.1, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface?
 			float cosi = -nhit.dot(raydir);
 			float k = 1 - eta * eta * (1 - cosi * cosi);
-			Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k));
+			Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrtf(k));
 			refrdir.normalize();
 			refraction = trace(phit - nhit * bias, refrdir, spheres, depth + 1, size);
 		}
@@ -174,7 +175,7 @@ __device__ __host__ Vec3f trace(
 	}
 
 	else {
-		
+
 		// it's a diffuse object, no need to raytrace any further
 		for (unsigned i = 0; i < size; ++i) {
 			if (spheres[i].emissionColor.x > 0) {
@@ -182,16 +183,14 @@ __device__ __host__ Vec3f trace(
 				Vec3f transmission = 1;
 				Vec3f lightDirection = spheres[i].center - phit;
 				lightDirection.normalize();
-				
+
 				for (unsigned j = 0; j < size; ++j) {
 					if (i != j) {
-						
 						float t0, t1;
 						if (spheres[j].intersect(phit + nhit * bias, lightDirection, t0, t1)) {
 							transmission = 0;
 							break;
 						}
-						//printf("i = %d, j = %d\n", i, j);
 					}
 				}
 				surfaceColor += sphere->surfaceColor * transmission *
@@ -199,32 +198,35 @@ __device__ __host__ Vec3f trace(
 			}
 		}
 	}
-	//printf("trace ended\n");
+	//Vec3f color = surfaceColor + sphere->emissionColor;
+	//printf("color.x: %f, color.y: %f, color.z: %f\n", color.x, color.y, color.z);
 	return surfaceColor + sphere->emissionColor;
 }
 
 
 //Here each thread specifies the ray origin and direction then calls the trace function
-__global__ void par_render(Sphere* spheres, Vec3f* pixel, float invHeight, float invWidth, float angle, float fov, float aspectRatio, int size){
+__global__ void par_render(Sphere* spheres, Vec3f* pixel, float invHeight, float invWidth,
+	float angle, float fov, float aspectRatio, int size, int offset) {
 	extern __shared__ Sphere shared_spheres[];
 	int x = blockDim.x*blockIdx.x + threadIdx.x;
-	int y = blockDim.y*blockIdx.y + threadIdx.y;
-	if (threadIdx.x == 0) {
-		for (int i = 0; i < size; i++){
+	int y = blockDim.y*blockIdx.y + threadIdx.y+offset;
+	if (threadIdx.x == 0 && threadIdx.y == 0) {
+		for (int i = 0; i < size; i++) {
 			shared_spheres[i] = spheres[i];
 		}
 	}
 	__syncthreads();
 	pixel += x + y*WIDTH;
 	float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectRatio;
-	float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;	
+	float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
 	Vec3f raydir(xx, yy, -1);
 	raydir.normalize();
 	//printf("entered kernel\n");
 	if (x < WIDTH && y < HEIGHT) {
 		*pixel = trace(Vec3f(0), raydir, shared_spheres, 0, size);
+		//printf("pixel: %f, %f, %f\n", pixel[x+y*WIDTH].x, pixel[x+y*WIDTH].y, pixel[x + y*WIDTH].z);
 	}
-		
+
 }
 
 //In this function we allocate GPU memories, copy the data to GPU and call the kernel (par_render)
@@ -232,22 +234,27 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 {
 	int size = spheres.size();
 	unsigned int spheres_size = size * sizeof(Sphere);
-	//printf("d_sphere's first element origin: %d", spheres_size);
-	//std::vector<Sphere> d_spheres;
 	Sphere *d_spheres;
 	Vec3f *image = new Vec3f[WIDTH * HEIGHT], *pixel = image;
-	//Vec3f *d_image;
 	Vec3f *d_pixel;
 	unsigned int image_size = WIDTH*HEIGHT * sizeof(Vec3f);
+
+	const int nStreams = 3;
+	const int streamSize = WIDTH*HEIGHT / nStreams;
+	const int streamSize_width = WIDTH / nStreams;
+	const int streamSize_height = HEIGHT / nStreams;
+	const int streamBytes = streamSize * sizeof(Vec3f);
+
 	float invWidth = 1 / float(WIDTH), invHeight = 1 / float(HEIGHT);
 	float fov = 30, aspectratio = WIDTH / float(HEIGHT);
 	float angle = tan(M_PI * 0.5 * fov / 180.);
 
 
-	
+
 	cudaError_t err;
 	cudaEvent_t start0, stop0;
-	dim3 grid((WIDTH-1)/BS+1, (HEIGHT-1)/BS + 1, 1);
+	cudaStream_t stream[nStreams];
+	dim3 grid(((WIDTH - 1) / BS) + 1, ((streamSize_height - 1) / BS) + 1, 1);
 	dim3 threads(BS, BS, 1);
 
 	err = cudaEventCreate(&start0);
@@ -272,6 +279,12 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
+	/*err = cudaMallocHost((void **)&pixel, image_size);
+	if (err != cudaSuccess) {
+		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+		system("PAUSE");
+		exit(EXIT_FAILURE);
+	}*/
 	err = cudaMalloc((void **)&d_pixel, image_size);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
@@ -282,20 +295,40 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
-	
-	par_render << <grid, threads, spheres_size >> > (d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size);
-
-	err = cudaGetLastError();
-	if (err != cudaSuccess) {
+	for (int i = 0; i < nStreams; i++) {
+		err = cudaStreamCreate(&stream[i]);
+		if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
+		}
 	}
+	memset(pixel, 0, image_size);
+	for (int i = 0; i<nStreams; i++){
+		int offset = i * streamSize/WIDTH;
+		par_render << <grid, threads, spheres_size, stream[i] >> >
+			(d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size, offset);
+	}
+
+	for (int i = 0; i < nStreams; i++) {
+		int offset = i* streamSize;
+		err = cudaMemcpyAsync(&pixel[offset], &d_pixel[offset], streamBytes, cudaMemcpyDeviceToHost, stream[i]);
+		if (err != cudaSuccess) {
+			printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
+			system("PAUSE");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	//[COMMENT]
+	//for launching without kernel slicing uncomment the following code
+
+	/*par_render << <grid, threads, spheres_size >> > (d_spheres, d_pixel, invHeight, invWidth, angle, fov, aspectratio, size, 0);
 	err = cudaMemcpy(pixel, d_pixel, image_size, cudaMemcpyDeviceToHost);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
-	
+	*/
 	err = cudaEventRecord(stop0, NULL);
 	if (err != cudaSuccess) {
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
@@ -314,6 +347,8 @@ Vec3f parallelRender(std::vector<Sphere> &spheres)
 		printf("%s in %s at line %d\n", cudaGetErrorString(err), __FILE__, __LINE__);
 		exit(EXIT_FAILURE);
 	}
+	cudaEventDestroy(start0);
+	cudaEventDestroy(stop0);
 	printf("Calculation time in msec = %f\n", elapsed_time);
 	// Save result to a PPM image (keep these flags if you compile under Windows)
 	std::ofstream ofs("./picture.ppm", std::ios::out | std::ios::binary);

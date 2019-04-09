@@ -1,27 +1,30 @@
 ﻿  Compiling CUDA source file kernel.cu...
   
   G:\Projects\cuda_minimal\cuda_minimal>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\nvcc.exe" -gencode=arch=compute_30,code=\"sm_30,compute_30\" --use-local-env --cl-version 2015 -ccbin "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\x86_amd64" -x cu  -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "G:\Projects\cuda_minimal\cuda_minimal\kernel.cu" 
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(206): warning : calling a constexpr __host__ function("max") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(205): warning : calling a constexpr __host__ function from a __host__ __device__ function is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(304): warning : missing return statement at end of non-void function "parallelRender"
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(205): warning : calling a constexpr __host__ function("std::max<float> ") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
-CUDACOMPILE : ptxas warning : Stack size for entry function '_Z10par_renderP6SphereP4Vec3IfEfffffi' cannot be statically determined
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(304): warning : missing return statement at end of non-void function "parallelRender"
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(196): warning : calling a constexpr __host__ function("max") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(195): warning : calling a constexpr __host__ function from a __host__ __device__ function is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(350): warning : missing return statement at end of non-void function "parallelRender"
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(240): warning : variable "streamSize_width" was declared but never referenced
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(195): warning : calling a constexpr __host__ function("std::max<float> ") from a __host__ __device__ function("trace") is not allowed. The experimental flag '--expt-relaxed-constexpr' can be used to allow this.
+CUDACOMPILE : ptxas warning : Stack size for entry function '_Z10par_renderP6SphereP4Vec3IfEfffffii' cannot be statically determined
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(350): warning : missing return statement at end of non-void function "parallelRender"
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(240): warning : variable "streamSize_width" was declared but never referenced
   kernel.cu
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(135): warning C4018: '<': signed/unsigned mismatch
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(156): warning C4305: 'initializing': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(162): warning C4305: 'argument': truncation from 'double' to 'const float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(171): warning C4305: 'initializing': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(187): warning C4018: '<': signed/unsigned mismatch
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(194): warning C4018: '<': signed/unsigned mismatch
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(234): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(127): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(148): warning C4305: 'initializing': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(154): warning C4305: 'argument': truncation from 'double' to 'const float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(163): warning C4305: 'initializing': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(179): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(186): warning C4018: '<': signed/unsigned mismatch
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(231): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(246): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(350): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(351): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(352): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(353): warning C4305: 'argument': truncation from 'double' to 'float'
-G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(354): warning C4305: 'argument': truncation from 'double' to 'float'
-g:\projects\cuda_minimal\cuda_minimal\kernel.cu(304): warning C4715: 'parallelRender': not all control paths return a value
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(362): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(363): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(364): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(365): warning C4305: 'argument': truncation from 'double' to 'float'
+G:/Projects/cuda_minimal/cuda_minimal/kernel.cu(366): warning C4305: 'argument': truncation from 'double' to 'float'
+g:\projects\cuda_minimal\cuda_minimal\kernel.cu(350): warning C4715: 'parallelRender': not all control paths return a value
+  LINK : G:\Projects\cuda_minimal\x64\Debug\cuda_minimal.exe not found or not built by the last incremental link; performing full link
   cuda_minimal.vcxproj -> G:\Projects\cuda_minimal\x64\Debug\cuda_minimal.exe
   cuda_minimal.vcxproj -> G:\Projects\cuda_minimal\x64\Debug\cuda_minimal.pdb (Full PDB)
   copy "C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\bin\cudart*.dll" "G:\Projects\cuda_minimal\x64\Debug\"
